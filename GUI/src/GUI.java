@@ -125,7 +125,7 @@ class Room {
                 boolean isBeforeExistingBooking = endDate.before(customer.getCheckInDate()) || endDate.equals(customer.getCheckInDate());
                 boolean isAfterExistingBooking = startDate.after(customer.getCheckOutDate()) || startDate.equals(customer.getCheckOutDate());
 
-                return isBeforeExistingBooking || isAfterExistingBooking;
+                return !(isBeforeExistingBooking || isAfterExistingBooking);
             }
         }
         return false;
@@ -222,6 +222,7 @@ class Customer {
 class HotelManagementGUI {
     private Hotel hotel;
     private JPanel inputPanel;
+    private ImageIcon icon;
 
     public HotelManagementGUI(Hotel hotel) {
         this.hotel = hotel;
@@ -291,15 +292,16 @@ class HotelManagementGUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Display input fields for adding a room
-                inputPanel.removeAll();
-                inputPanel.add(new JLabel("Room Number:"));
                 JTextField roomNumberField = new JTextField();
+                JTextField roomTypeField = new JTextField();
+                JTextField roomPriceField = new JTextField();
+
+                JPanel inputPanel = new JPanel(new GridLayout(0, 2));
+                inputPanel.add(new JLabel("Room Number:"));
                 inputPanel.add(roomNumberField);
                 inputPanel.add(new JLabel("Room Type:"));
-                JTextField roomTypeField = new JTextField();
                 inputPanel.add(roomTypeField);
                 inputPanel.add(new JLabel("Room Price:"));
-                JTextField roomPriceField = new JTextField();
                 inputPanel.add(roomPriceField);
 
                 int result = JOptionPane.showConfirmDialog(null, inputPanel,
@@ -320,6 +322,7 @@ class HotelManagementGUI {
                 }
             }
         });
+
 
         removeRoomButton.addActionListener(new ActionListener() {
             @Override
@@ -389,6 +392,7 @@ class HotelManagementGUI {
                 }
             }
         });
+
 
         bookRoomButton.addActionListener(new ActionListener() {
             @Override
