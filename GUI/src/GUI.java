@@ -5,12 +5,12 @@ import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 class Hotel {
     private String name;
     private String address;
     private String contactDetails;
-    private int roomNumber;
     private ArrayList<Room> rooms;
 
     public Hotel(String name, String address, String contactDetails) {
@@ -28,15 +28,20 @@ class Hotel {
         rooms.remove(room);
     }
 
+    // Checks the availability of a room for a given date range
     public boolean checkAvailability(int roomNumber, Date startDate, Date endDate) {
         // Implementation to check room availability for the given date range
         Room room = findRoomByNumber(roomNumber);
         if (room != null) {
             return room.isAvailable(startDate, endDate);
         }
-        return false;
+        else {
+            System.out.println("Room with number " + roomNumber + " not found.");
+            return false;
+        }
     }
 
+    // Books a room for a customer for a specified date range
     public void bookRoom(int roomNumber, Customer customer, Date startDate, Date endDate) {
         // Implementation to book a room for a customer and update its availability status
         Room room = findRoomByNumber(roomNumber);
@@ -47,7 +52,7 @@ class Hotel {
         }
     }
 
-
+    // Checks out a customer from a room
     public void checkOut(int roomNumber) {
         Room room = findRoomByNumber(roomNumber);
         if (room != null && room.isOccupied()) {
@@ -57,11 +62,7 @@ class Hotel {
         }
     }
 
-
-    public int getRoomNumber() {
-        return roomNumber;
-    }
-
+    // Finds a room by its room number
     public Room findRoomByNumber(int roomNumber) {
         for (Room room : rooms) {
             if (room.getRoomNumber() == roomNumber) {
@@ -71,16 +72,7 @@ class Hotel {
         return null;
     }
 
-    public ArrayList<String> getRoomDetailsList() {
-        ArrayList<String> roomDetailsList = new ArrayList<>();
-
-        for (Room room : rooms) {
-            roomDetailsList.add(room.getRoomDetails());
-        }
-
-        return roomDetailsList;
-    }
-
+    // Gets a list of all rooms
     public ArrayList<Room> getRooms() {
         return rooms;
     }
@@ -93,23 +85,20 @@ class Room {
     private boolean availability;
     private Customer customer;
 
+    private ArrayList<Booking> bookings;
+
+    // Constructor initializes a room with a room number, type, and price
     public Room(int roomNumber, String type, double price) {
         this.roomNumber = roomNumber;
         this.type = type;
         this.price = price;
         this.availability = true;
         this.customer = null;
+        this.bookings = new ArrayList<>();
+
     }
 
-    public void updateAvailability(boolean availability) {
-        this.availability = availability;
-    }
-
-    public String getRoomDetails() {
-        // Return room details as a string
-        return "Room Number: " + roomNumber + "\nType: " + type + "\nPrice: " + price + "\nAvailability: " + availability;
-    }
-
+    // Gets the room number
     public int getRoomNumber() {
         return roomNumber;
     }
@@ -125,16 +114,18 @@ class Room {
                 boolean isBeforeExistingBooking = endDate.before(customer.getCheckInDate()) || endDate.equals(customer.getCheckInDate());
                 boolean isAfterExistingBooking = startDate.after(customer.getCheckOutDate()) || startDate.equals(customer.getCheckOutDate());
 
-                return !(isBeforeExistingBooking || isAfterExistingBooking);
+                return isBeforeExistingBooking || isAfterExistingBooking;
             }
         }
         return false;
     }
 
     public void bookRoom(Customer customer, Date startDate, Date endDate) {
-        if (isAvailable(startDate, endDate)) {
+        if (isAvailable(startDate, endDate) && customer != null) {
             // Set the customer and update availability
-            this.customer = customer;
+            Booking booking = new Booking(customer, startDate, endDate);
+            bookings.add(booking);
+
             this.availability = false;
 
             // Update Customer check-in and check-out dates
@@ -145,6 +136,36 @@ class Room {
             System.out.println("Room booked successfully!");
         } else {
             System.out.println("Room not available for the specified date range.");
+        }
+    }
+
+    public static class Booking {
+        private Customer customer;
+        private Date checkInDate;
+        private Date checkOutDate;
+
+        public Booking(Customer customer, Date checkInDate, Date checkOutDate) {
+            this.customer = customer;
+            this.checkInDate = checkInDate;
+            this.checkOutDate = checkOutDate;
+        }
+
+        public Date getCheckInDate() {
+            if (customer != null) {
+                return customer.getCheckInDate();
+            }
+            return null;
+        }
+
+        public Date getCheckOutDate() {
+            if (customer != null) {
+                return customer.getCheckOutDate();
+            }
+            return null;
+        }
+
+        public Customer getCustomer() {
+            return customer;
         }
     }
 
@@ -175,6 +196,24 @@ class Room {
 
     public double getPrice() {
         return price;
+    }
+
+    public ArrayList<Booking> getBookings() {
+        return bookings;
+    }
+
+    public Date getCheckInDate() {
+        if (customer != null) {
+            return customer.getCheckInDate();
+        }
+        return null;
+    }
+
+    public Date getCheckOutDate() {
+        if (customer != null) {
+            return customer.getCheckOutDate();
+        }
+        return null;
     }
 
 
@@ -218,21 +257,110 @@ class Customer {
         return contactDetails;
     }
 }
+class IDandPasswords {
 
+    HashMap<String, String> logininfo = new HashMap<String, String>();
+
+    IDandPasswords() {
+
+        logininfo.put("Admin", "123");
+    }
+
+    public HashMap getLoginInfo() {
+        return logininfo;
+    }
+}
+
+
+class LoginPage implements ActionListener {
+
+    JFrame frame = new JFrame();
+    JButton loginButton = new JButton("Login");
+    JButton resetButton = new JButton("Reset");
+    JTextField userIDField = new JTextField();
+    JPasswordField userPasswordField = new JPasswordField();
+    JLabel userIDLabel = new JLabel("userID:");
+    JLabel userPasswordLabel = new JLabel("password:");
+    JLabel messageLabel = new JLabel();
+    HashMap<String, String> logininfo = new HashMap<String, String>();
+
+    LoginPage(HashMap<String, String> loginInfoOriginal) {
+
+        logininfo = loginInfoOriginal;
+
+        userIDLabel.setBounds(50, 100, 75, 25);
+        userPasswordLabel.setBounds(50, 150, 75, 25);
+
+        messageLabel.setBounds(125, 250, 250, 35);
+        messageLabel.setFont(new Font(null, Font.ITALIC, 25));
+
+        userIDField.setBounds(125, 100, 200, 25);
+        userPasswordField.setBounds(125, 150, 200, 25);
+
+        loginButton.setBounds(125, 200, 100, 25);
+        loginButton.setFocusable(false);
+        loginButton.addActionListener(this);
+
+        resetButton.setBounds(225, 200, 100, 25);
+        resetButton.setFocusable(false);
+        resetButton.addActionListener(this);
+
+        frame.add(userIDLabel);
+        frame.add(userPasswordLabel);
+        frame.add(messageLabel);
+        frame.add(userIDField);
+        frame.add(userPasswordField);
+        frame.add(loginButton);
+        frame.add(resetButton);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(420, 420);
+        frame.setLayout(null);
+        frame.setVisible(true);
+
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == resetButton) {
+            userIDField.setText("");
+            userPasswordField.setText("");
+        }
+
+        if (e.getSource() == loginButton) {
+            String userID = userIDField.getText();
+            String password = String.valueOf(userPasswordField.getPassword());
+
+            if (logininfo.containsKey(userID)) {
+                if (logininfo.get(userID).equals(password)) {
+                    messageLabel.setForeground(Color.green);
+                    messageLabel.setText("Login successful");
+                    frame.dispose();
+                    HotelManagementGUI hotelManagementGUI = new HotelManagementGUI(userID);
+                } else {
+                    messageLabel.setForeground(Color.red);
+                    messageLabel.setText("Wrong password");
+                }
+            } else {
+                messageLabel.setForeground(Color.red);
+                messageLabel.setText("Username not found");
+            }
+        }
+    }
+}
 class HotelManagementGUI {
     private Hotel hotel;
     private JPanel inputPanel;
-    private ImageIcon icon;
+    private String userID;
 
-    public HotelManagementGUI(Hotel hotel) {
-        this.hotel = hotel;
+    public HotelManagementGUI(String userID) {
+        this.userID = userID;
+        this.hotel = new Hotel("My Hotel", "123 Main St", "123-456-7890");
         createAndShowGUI();
     }
 
     private void createAndShowGUI() {
+
         JFrame frame = new JFrame("Hotel Management System");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(420, 420);
 
         JLabel text = new JLabel("Welcome To Booking System");
 
@@ -256,17 +384,20 @@ class HotelManagementGUI {
 
         inputPanel = new JPanel(new GridLayout(0, 2));
 
+        // View All Rooms Button
         viewAllRoomsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // Retrieve all rooms from the hotel
                 ArrayList<Room> allRooms = hotel.getRooms();
 
                 if (!allRooms.isEmpty()) {
+                    // Prepare data for displaying in a table
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
                     String[][] data = new String[allRooms.size()][4];
                     int i = 0;
 
+                    // Populate the data array with room details
                     for (Room room : allRooms) {
                         data[i][0] = String.valueOf(room.getRoomNumber());
                         data[i][1] = room.getType();
@@ -278,6 +409,7 @@ class HotelManagementGUI {
 
                     String[] columnNames = {"Room Number", "Type", "Price", "Availability"};
 
+                    // Create a table and display it in a JOptionPane
                     JTable table = new JTable(data, columnNames);
                     JScrollPane scrollPane = new JScrollPane(table);
 
@@ -288,6 +420,7 @@ class HotelManagementGUI {
             }
         });
 
+        // Add Room Button
         addRoomButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -304,11 +437,13 @@ class HotelManagementGUI {
                 inputPanel.add(new JLabel("Room Price:"));
                 inputPanel.add(roomPriceField);
 
+                // Show input dialog and handle user input
                 int result = JOptionPane.showConfirmDialog(null, inputPanel,
                         "Enter Room Information", JOptionPane.OK_CANCEL_OPTION);
 
                 if (result == JOptionPane.OK_OPTION) {
                     try {
+                        // Parse input and create a new room
                         int roomNumber = Integer.parseInt(roomNumberField.getText());
                         String type = roomTypeField.getText();
                         double price = Double.parseDouble(roomPriceField.getText());
@@ -323,7 +458,7 @@ class HotelManagementGUI {
             }
         });
 
-
+        // Remove Room Button
         removeRoomButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -333,11 +468,13 @@ class HotelManagementGUI {
                 JTextField roomNumberField = new JTextField();
                 inputPanel.add(roomNumberField);
 
+                // Show input dialog and handle user input
                 int result = JOptionPane.showConfirmDialog(null, inputPanel,
                         "Enter Room Information", JOptionPane.OK_CANCEL_OPTION);
 
                 if (result == JOptionPane.OK_OPTION) {
                     try {
+                        // Parse input, find and remove the specified room
                         int roomNumber = Integer.parseInt(roomNumberField.getText());
                         Room roomToRemove = hotel.findRoomByNumber(roomNumber);
 
@@ -354,6 +491,7 @@ class HotelManagementGUI {
             }
         });
 
+        // Check Availability Button
         checkAvailabilityButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -369,11 +507,13 @@ class HotelManagementGUI {
                 JTextField endDateField = new JTextField();
                 inputPanel.add(endDateField);
 
+                // Show input dialog and handle user input
                 int result = JOptionPane.showConfirmDialog(null, inputPanel,
                         "Enter Room Information", JOptionPane.OK_CANCEL_OPTION);
 
                 if (result == JOptionPane.OK_OPTION) {
                     try {
+                        // Parse input, check room availability, and show the result
                         int roomNumber = Integer.parseInt(roomNumberField.getText());
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                         Date startDate = dateFormat.parse(startDateField.getText());
@@ -393,15 +533,16 @@ class HotelManagementGUI {
             }
         });
 
-
+        // Book Room Button
+        // Book Room Button
         bookRoomButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Display input fields for booking a room
+                // Display input fields for booking rooms
                 inputPanel.removeAll();
-                inputPanel.add(new JLabel("Enter Room Number:"));
-                JTextField roomNumberField = new JTextField();
-                inputPanel.add(roomNumberField);
+                inputPanel.add(new JLabel("Enter Room Numbers (comma-separated):"));
+                JTextField roomNumbersField = new JTextField();
+                inputPanel.add(roomNumbersField);
                 inputPanel.add(new JLabel("Enter Customer Name:"));
                 JTextField customerNameField = new JTextField();
                 inputPanel.add(customerNameField);
@@ -415,12 +556,20 @@ class HotelManagementGUI {
                 JTextField checkOutDateField = new JTextField();
                 inputPanel.add(checkOutDateField);
 
+                // Show input dialog and handle user input
                 int result = JOptionPane.showConfirmDialog(null, inputPanel,
                         "Enter Room Information", JOptionPane.OK_CANCEL_OPTION);
 
                 if (result == JOptionPane.OK_OPTION) {
                     try {
-                        int roomNumber = Integer.parseInt(roomNumberField.getText());
+                        // Parse input and book the rooms for the specified date range
+                        String[] roomNumberStrings = roomNumbersField.getText().split(",");
+                        ArrayList<Integer> roomNumbers = new ArrayList<>();
+
+                        for (String roomNumberString : roomNumberStrings) {
+                            roomNumbers.add(Integer.parseInt(roomNumberString.trim()));
+                        }
+
                         String customerName = customerNameField.getText();
                         String contactDetails = contactDetailsField.getText();
                         Customer customer = new Customer(customerName, contactDetails);
@@ -428,8 +577,16 @@ class HotelManagementGUI {
                         Date startDate = dateFormat.parse(checkInDateField.getText());
                         Date endDate = dateFormat.parse(checkOutDateField.getText());
 
-                        hotel.bookRoom(roomNumber, customer, startDate, endDate);
-                        JOptionPane.showMessageDialog(null, "Room booked successfully!");
+                        for (int roomNumber : roomNumbers) {
+                            Room room = hotel.findRoomByNumber(roomNumber);
+                            if (room != null) {
+                                room.bookRoom(customer, startDate, endDate);
+                            } else {
+                                System.out.println("Room with number " + roomNumber + " not found.");
+                            }
+                        }
+
+                        JOptionPane.showMessageDialog(null, "Rooms booked successfully!");
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null, "Invalid input or date format!");
                     }
@@ -437,6 +594,8 @@ class HotelManagementGUI {
             }
         });
 
+
+        // Check Out Button
         checkOutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -446,11 +605,13 @@ class HotelManagementGUI {
                 JTextField roomNumberField = new JTextField();
                 inputPanel.add(roomNumberField);
 
+                // Show input dialog and handle user input
                 int result = JOptionPane.showConfirmDialog(null, inputPanel,
                         "Enter Room Information", JOptionPane.OK_CANCEL_OPTION);
 
                 if (result == JOptionPane.OK_OPTION) {
                     try {
+                        // Parse input and check out the specified room
                         int roomNumber = Integer.parseInt(roomNumberField.getText());
                         hotel.checkOut(roomNumber);
                         JOptionPane.showMessageDialog(null, "Room checked out successfully!");
@@ -461,39 +622,50 @@ class HotelManagementGUI {
             }
         });
 
+        // View Booking Button
+        // View Booking Button
+        // View Booking Button
+        // View Booking Button
+        // View Booking Button
         viewBookingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Improved logic for viewing all booked rooms information
+                // Retrieve all rooms from the hotel
                 ArrayList<Room> bookedRooms = new ArrayList<>();
 
+                // Identify booked rooms
                 for (Room room : hotel.getRooms()) {
-                    if (room.isOccupied() && room.getCustomer() != null) {
+                    if (!room.getBookings().isEmpty()) {
                         bookedRooms.add(room);
                     }
                 }
 
                 if (!bookedRooms.isEmpty()) {
+                    // Prepare data for displaying booked room information
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
                     String[][] data = new String[bookedRooms.size()][6];
                     int i = 0;
 
+                    // Populate the data array with booked room details
                     for (Room room : bookedRooms) {
-                        Customer customer = room.getCustomer();
+                        ArrayList<Room.Booking> bookings = room.getBookings();
+                        for (Room.Booking booking : bookings) {
+                            Customer customer = booking.getCustomer();
 
-                        data[i][0] = String.valueOf(room.getRoomNumber());
-                        data[i][1] = String.valueOf(!room.isOccupied());
-                        data[i][2] = customer.getCheckInDate() != null ? dateFormat.format(customer.getCheckInDate()) : "Not available";
-                        data[i][3] = customer.getCheckOutDate() != null ? dateFormat.format(customer.getCheckOutDate()) : "Not available";
-                        data[i][4] = customer.getName();
-                        data[i][5] = customer.getContactDetails();
+                            data[i][0] = String.valueOf(room.getRoomNumber());
+                            data[i][1] = "Booked";
+                            data[i][2] = (booking.getCheckInDate() != null) ? dateFormat.format(booking.getCheckInDate()) : "Not available";
+                            data[i][3] = (booking.getCheckOutDate() != null) ? dateFormat.format(booking.getCheckOutDate()) : "Not available";
+                            data[i][4] = (customer != null) ? customer.getName() : "Not available";
+                            data[i][5] = (customer != null) ? customer.getContactDetails() : "Not available";
 
-                        i++;
+                            i++;
+                        }
                     }
 
                     String[] columnNames = {"Room Number", "Availability", "Check-in Date", "Check-out Date", "Customer Name", "Contact Details"};
 
+                    // Create a table and display it in a JOptionPane
                     JTable table = new JTable(data, columnNames);
                     JScrollPane scrollPane = new JScrollPane(table);
 
@@ -504,6 +676,10 @@ class HotelManagementGUI {
             }
         });
 
+
+
+
+
         panel.add(text);
         panel.add(viewAllRoomsButton);
         panel.add(viewBookingButton);
@@ -513,6 +689,8 @@ class HotelManagementGUI {
         panel.add(bookRoomButton);
         panel.add(checkOutButton);
 
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(420, 420);
         frame.add(panel);
         frame.setVisible(true);
     }
@@ -521,6 +699,10 @@ class HotelManagementGUI {
 public class GUI {
     public static void main(String[] args) {
         Hotel hotel = new Hotel("My Hotel", "123 Main St", "123-456-7890");
-        HotelManagementGUI hotelManagementGUI = new HotelManagementGUI(hotel);
+        IDandPasswords idandPasswords = new IDandPasswords();
+
+        SwingUtilities.invokeLater(() -> {
+            LoginPage loginPage = new LoginPage(idandPasswords.getLoginInfo());
+        });
     }
 }
