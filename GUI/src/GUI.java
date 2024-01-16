@@ -49,25 +49,52 @@ class Hotel {
     }
 
     // Books a room for a customer for a specified date range
-    public void bookRoom(int roomNumber, Customer customer, Date startDate, Date endDate) {
-        // Implementation to book a room for a customer and update its availability status
-        Room room = findRoomByNumber(roomNumber);
-        if (room != null && room.isAvailable(startDate, endDate)) {
-            room.bookRoom(customer, startDate, endDate);
-        } else {
-            System.out.println("Room not available for the specified date range.");
+    // Modify the bookRoom method to accept multiple room numbers
+    public void bookRoom(String roomNumbers, Customer customer, Date startDate, Date endDate) {
+        // Split the input string into individual room numbers
+        String[] roomNumberStrings = roomNumbers.split(",");
+
+        for (String roomNumberString : roomNumberStrings) {
+            try {
+                int roomNumber = Integer.parseInt(roomNumberString.trim());
+
+                Room room = findRoomByNumber(roomNumber);
+                if (room != null && room.isAvailable(startDate, endDate)) {
+                    room.bookRoom(customer, startDate, endDate);
+                    System.out.println("Room " + roomNumber + " booked successfully!");
+                } else {
+                    System.out.println("Room " + roomNumber + " not available for the specified date range.");
+                }
+            } catch (NumberFormatException ex) {
+                System.out.println("Invalid room number: " + roomNumberString.trim());
+            }
         }
     }
 
+
     // Checks out a customer from a room
-    public void checkOut(int roomNumber) {
-        Room room = findRoomByNumber(roomNumber);
-        if (room != null && room.isOccupied()) {
-            room.checkOut();
-        } else {
-            System.out.println("Room is not occupied or does not exist.");
+    // Modify the checkOut method to accept multiple room numbers
+    public void checkOut(String roomNumbers) {
+        // Split the input string into individual room numbers
+        String[] roomNumberStrings = roomNumbers.split(",");
+
+        for (String roomNumberString : roomNumberStrings) {
+            try {
+                int roomNumber = Integer.parseInt(roomNumberString.trim());
+
+                Room room = findRoomByNumber(roomNumber);
+                if (room != null && room.isOccupied()) {
+                    room.checkOut();
+                    System.out.println("Room " + roomNumber + " checked out successfully!");
+                } else {
+                    System.out.println("Room " + roomNumber + " is not occupied or does not exist.");
+                }
+            } catch (NumberFormatException ex) {
+                System.out.println("Invalid room number: " + roomNumberString.trim());
+            }
         }
     }
+
 
     // Finds a room by its room number
     public Room findRoomByNumber(int roomNumber) {
@@ -546,15 +573,17 @@ class HotelManagementGUI {
         });
 
 
+
         // Book Room Button
+        // Modify the bookRoomButton ActionListener
         bookRoomButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Display input fields for booking a room
+                // Display input fields for booking rooms
                 inputPanel.removeAll();
-                inputPanel.add(new JLabel("Enter Room Number:"));
-                JTextField roomNumberField = new JTextField();
-                inputPanel.add(roomNumberField);
+                inputPanel.add(new JLabel("Enter Room Numbers (comma-separated):"));
+                JTextField roomNumbersField = new JTextField();
+                inputPanel.add(roomNumbersField);
                 inputPanel.add(new JLabel("Enter Customer Name:"));
                 JTextField customerNameField = new JTextField();
                 inputPanel.add(customerNameField);
@@ -578,8 +607,8 @@ class HotelManagementGUI {
 
                 if (result == JOptionPane.OK_OPTION) {
                     try {
-                        // Parse input and book the room for the specified date range
-                        int roomNumber = Integer.parseInt(roomNumberField.getText());
+                        // Parse input and book the rooms for the specified date range
+                        String roomNumbers = roomNumbersField.getText();
                         String customerName = customerNameField.getText();
                         String contactDetails = contactDetailsField.getText();
                         Customer customer = new Customer(customerName, contactDetails);
@@ -588,8 +617,7 @@ class HotelManagementGUI {
                         Date startDate = checkInDateChooser.getDate();
                         Date endDate = checkOutDateChooser.getDate();
 
-                        hotel.bookRoom(roomNumber, customer, startDate, endDate);
-                        JOptionPane.showMessageDialog(null, "Room booked successfully!");
+                        hotel.bookRoom(roomNumbers, customer, startDate, endDate);
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null, "Invalid input or date format!");
                     }
@@ -598,15 +626,17 @@ class HotelManagementGUI {
         });
 
 
+
         // Check Out Button
+        // Modify the checkOutButton ActionListener
         checkOutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Display input fields for checking out
+                // Display input fields for checking out rooms
                 inputPanel.removeAll();
-                inputPanel.add(new JLabel("Enter Room Number to check out:"));
-                JTextField roomNumberField = new JTextField();
-                inputPanel.add(roomNumberField);
+                inputPanel.add(new JLabel("Enter Room Numbers to check out (comma-separated):"));
+                JTextField roomNumbersField = new JTextField();
+                inputPanel.add(roomNumbersField);
 
                 // Show input dialog and handle user input
                 int result = JOptionPane.showConfirmDialog(null, inputPanel,
@@ -614,12 +644,11 @@ class HotelManagementGUI {
 
                 if (result == JOptionPane.OK_OPTION) {
                     try {
-                        // Parse input and check out the specified room
-                        int roomNumber = Integer.parseInt(roomNumberField.getText());
-                        hotel.checkOut(roomNumber);
-                        JOptionPane.showMessageDialog(null, "Room checked out successfully!");
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(null, "Invalid input. Please enter valid numbers.");
+                        // Parse input and check out the specified rooms
+                        String roomNumbers = roomNumbersField.getText();
+                        hotel.checkOut(roomNumbers);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(null, "Invalid input or room number format!");
                     }
                 }
             }
